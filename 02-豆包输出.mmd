@@ -1,0 +1,36 @@
+graph TD
+    A[开始: 调用 sendFile 接口] --> B[获取 HttpSession 和当前用户信息]
+    B --> C[记录日志：报送任务开始，当前用户]
+    C --> D[获取当前时间]
+    D --> E[根据 sendDataInfoId 查询 SendDataInfo]
+    E --> F[记录日志：报送报表名称]
+    F --> G[更新 SendDataInfo 修改时间和修改用户]
+    G --> H[初始化 FileUploadResponse]
+    H --> I[拼接源文件路径：filepath = 源文件目录 + 文件名]
+    I --> J[检查文件是否存在]
+    J -->|不存在| K[设置响应：文件不存在错误，返回响应]
+    J -->|存在| L[进入 try 块]
+    L --> M[获取源文件名 sourceFileName]
+    M --> N{是否以 V_CASH_WITHDRAW_CORP_SP 或 V_NB_CASH_WITHDRAW_CORP_SP 开头？}
+    N -->|是| O[调用 validateV_CASH_WITHDRAW_CORP_SP 校验文件]
+    O --> P{校验结果？}
+    P -->|empty（文件为空）| Q[设置响应描述为"文件为空，报送成功"；更新 SendDataInfo 状态为 MSG_4；返回响应]
+    P -->|success（校验通过）| R[执行 CreateJsonFile.createJsonFileForUnsend]
+    R --> S[执行 FormatJsonFile.formateJsonFileForUnsend]
+    S --> T[调用 Encrypt_UploadFile.encryptAndUpload 获取响应]
+    P -->|其他（校验未通过）| U[更新 SendDataInfo 状态为 MSG_9；设置响应错误信息，返回响应]
+    N -->|否| R
+    T -->|异常捕获| V[设置响应错误信息（e.getMessage），记录错误日志，返回响应]
+    L -->|异常| V
+    T --> W{上传是否成功？}
+    W -->|成功| X[设置响应描述为"上传成功"；更新 SendDataInfo 提交时间、transToken、状态为 MSG_7]
+    W -->|失败| Y[更新 SendDataInfo 状态为 MSG_3]
+    X --> Z[更新 SendDataInfo 到数据库]
+    Y --> Z
+    Z --> AA[记录日志：报送任务结束]
+    AA --> AB[返回最终响应]
+    K --> AB
+    Q --> AB
+    U --> AB
+    V --> AB
+    
