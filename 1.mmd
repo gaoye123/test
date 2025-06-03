@@ -1,0 +1,63 @@
+flowchart TD
+    A[开始: sendFile方法] --> B[获取用户会话和当前用户信息]
+    B --> C[记录开始日志]
+    C --> D[获取当前时间]
+    D --> E[根据sendDataInfoId查询数据库获取SendDataInfo]
+    E --> F[记录报送文件名日志]
+    F --> G[更新修改时间和修改用户]
+    G --> H[构建文件路径]
+    H --> I{检查文件是否存在}
+    
+    I -->|文件不存在| J[设置错误响应]
+    J --> K[返回文件不存在错误]
+    
+    I -->|文件存在| L{检查文件名是否为特殊类型}
+    L -->|是V_CASH_WITHDRAW_CORP_SP类型| M[执行特殊校验]
+    L -->|不是特殊类型| N[创建JSON文件]
+    
+    M --> O{校验结果判断}
+    O -->|文件为空 empty| P[设置文件为空状态]
+    P --> Q[更新数据库状态为MSG_4]
+    Q --> R[返回空文件成功响应]
+    
+    O -->|校验成功 success| S[创建JSON文件]
+    S --> T[格式化JSON文件]
+    T --> U[加密并上传文件]
+    
+    O -->|校验失败| V[设置校验失败状态]
+    V --> W[更新数据库状态为MSG_9]
+    W --> X[返回校验失败错误]
+    
+    N --> Y[格式化JSON文件]
+    Y --> Z[加密并上传文件]
+    
+    U --> AA{处理过程是否异常}
+    Z --> AA
+    
+    AA -->|发生异常| BB[捕获异常]
+    BB --> CC[设置异常错误响应]
+    CC --> DD[记录错误日志]
+    DD --> EE[返回异常错误响应]
+    
+    AA -->|无异常| FF{上传是否成功}
+    
+    FF -->|上传成功| GG[设置成功状态]
+    GG --> HH[更新提交时间]
+    HH --> II[设置传输Token]
+    II --> JJ[设置状态为MSG_7成功]
+    JJ --> KK[更新数据库]
+    
+    FF -->|上传失败| LL[设置失败状态]
+    LL --> MM[设置状态为MSG_3失败]
+    MM --> NN[更新数据库]
+    
+    KK --> OO[记录结束日志]
+    NN --> OO
+    OO --> PP[返回最终响应]
+    
+    style A fill:#e1f5fe
+    style K fill:#ffebee
+    style R fill:#f3e5f5
+    style X fill:#ffebee
+    style EE fill:#ffebee
+    style PP fill:#e8f5e8
