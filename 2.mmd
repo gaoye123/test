@@ -1,0 +1,42 @@
+flowchart LR
+    START([开始]) --> INIT[初始化<br/>获取用户信息<br/>查询数据库]
+    INIT --> CHECK{文件存在?}
+    
+    CHECK -->|否| ERROR1[返回文件不存在错误]
+    CHECK -->|是| TYPE{特殊文件类型?}
+    
+    TYPE -->|V_CASH_WITHDRAW_CORP_SP| VALIDATE[特殊校验]
+    TYPE -->|普通文件| PROCESS[创建&格式化JSON]
+    
+    VALIDATE --> RESULT{校验结果}
+    RESULT -->|empty| EMPTY[MSG_4:文件为空成功]
+    RESULT -->|success| PROCESS
+    RESULT -->|失败| ERROR2[MSG_9:校验失败]
+    
+    PROCESS --> UPLOAD[加密并上传]
+    UPLOAD --> EXCEPTION{异常?}
+    
+    EXCEPTION -->|是| ERROR3[返回异常错误]
+    EXCEPTION -->|否| SUCCESS{上传成功?}
+    
+    SUCCESS -->|是| FINAL_SUCCESS[MSG_7:上传成功<br/>更新数据库]
+    SUCCESS -->|否| FINAL_FAIL[MSG_3:上传失败<br/>更新数据库]
+    
+    EMPTY --> END([结束])
+    ERROR1 --> END
+    ERROR2 --> END
+    ERROR3 --> END
+    FINAL_SUCCESS --> END
+    FINAL_FAIL --> END
+    
+    classDef startEnd fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef process fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef decision fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef success fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef error fill:#ffebee,stroke:#b71c1c,stroke-width:2px
+    
+    class START,END startEnd
+    class INIT,PROCESS,UPLOAD process
+    class CHECK,TYPE,RESULT,EXCEPTION,SUCCESS decision
+    class FINAL_SUCCESS,EMPTY success
+    class ERROR1,ERROR2,ERROR3,FINAL_FAIL error
